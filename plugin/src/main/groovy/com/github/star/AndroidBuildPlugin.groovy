@@ -42,7 +42,6 @@ class AndroidBuildPlugin implements Plugin<Project> {
                 return service.uploadEnabled
             }
         })
-
         service.androidBuildTask.convention(project.tasks.register("build_android") { task ->
             task.group = service.BUILD_TOOL_TASK_GROUP
             task.description = ""
@@ -52,19 +51,12 @@ class AndroidBuildPlugin implements Plugin<Project> {
                 return service.androidBuildEnabled
             }
         })
-
         service.assembleTask.convention(project.tasks.register(service.ASSEMBLE_NOT_FOUND_TASK) { task ->
             group = service.BUILD_TOOL_TASK_GROUP
             task.doFirst {
                 logger.error("找不到Android构建任务")
             }
         })
-
-        PropsConfig.metaClass.setExt = { String key, String value ->
-            project.allprojects.each {
-                it.ext[key] = value
-            }
-        }
         project.extensions.configure(AndroidBuildExtension) { ext ->
             extension.service = buildService
             extension.replacements.metaClass.dir = { String dir, Closure cl ->
@@ -90,11 +82,10 @@ class AndroidBuildPlugin implements Plugin<Project> {
                 cl()
             }
         }
-
         project.afterEvaluate {
-            extension.props.each { p ->
-                project.allprojects.each {
-                    it.ext[p.name] = p.value
+            extension.props.each { props ->
+                project.allprojects.each { proj ->
+                    proj.ext[props.name] = props.value
                 }
             }
             def app = project.evaluationDependsOn(":app")
