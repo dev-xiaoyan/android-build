@@ -88,7 +88,7 @@ class AndroidBuildPlugin implements Plugin<Project> {
         }
 
         project.afterEvaluate {
-            def app = evaluationDependsOn(":app")
+            def app = project.evaluationDependsOn(":app")
             app.android.applicationVariants.all { variant ->
                 if (variant.buildType.name == "release") {
                     variant.productFlavors.each { flavor ->
