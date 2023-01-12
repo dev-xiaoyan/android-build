@@ -92,6 +92,11 @@ class AndroidBuildPlugin implements Plugin<Project> {
         }
 
         project.afterEvaluate {
+            extension.props.each { p ->
+                project.allprojects.each {
+                    it.ext[p.name] = p.value
+                }
+            }
             def app = project.evaluationDependsOn(":app")
             app.android.applicationVariants.all { variant ->
                 if (variant.buildType.name == "release") {
