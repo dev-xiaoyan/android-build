@@ -60,7 +60,11 @@ class AndroidBuildPlugin implements Plugin<Project> {
             }
         })
 
-        PropsConfig.metaClass.ext = project.ext
+        PropsConfig.metaClass.setExt = { String key, String value ->
+            project.allprojects.each {
+                it.ext[key] = value
+            }
+        }
         project.extensions.configure(AndroidBuildExtension) { ext ->
             extension.service = buildService
             extension.replacements.metaClass.dir = { String dir, Closure cl ->
