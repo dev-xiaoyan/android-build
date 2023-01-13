@@ -18,7 +18,7 @@ class AndroidBuildPlugin implements Plugin<Project> {
             task.usesService(buildService)
             task.service.set(buildService)
             task.onlyIf {
-                return service.reportEnabled
+                return service.reportEnabled && service.assembleTaskFound
             }
         })
         service.replacementTask.convention(project.tasks.register("res_replacement", ResReplacementTask) { task ->
@@ -28,7 +28,7 @@ class AndroidBuildPlugin implements Plugin<Project> {
             task.service.set(buildService)
             task.finalizedBy(service.reportTask)
             task.onlyIf {
-                return service.replacementEnabled
+                return service.replacementEnabled && service.assembleTaskFound
             }
         })
         service.uploadTask.convention(project.tasks.register("upload_amazon", AmazonUploadTask) { task ->
@@ -48,13 +48,13 @@ class AndroidBuildPlugin implements Plugin<Project> {
             task.dependsOn(service.replacementTask)
             task.finalizedBy(service.assembleTask, service.uploadTask, service.reportTask)
             task.onlyIf {
-                return service.androidBuildEnabled
+                return service.androidBuildEnabled && service.assembleTaskFound
             }
         })
         service.assembleTask.convention(project.tasks.register(service.ASSEMBLE_NOT_FOUND_TASK) { task ->
             group = service.BUILD_TOOL_TASK_GROUP
             task.doFirst {
-                println("找不到Android构建任务")
+                println("构建任务不可用,将跳过本次构建")
             }
         })
         project.extensions.configure(AndroidBuildExtension) { ext ->
@@ -84,11 +84,9 @@ class AndroidBuildPlugin implements Plugin<Project> {
         }
         project.afterEvaluate {
             extension.props.each { props ->
-                project.allprojects.each { proj ->
-                    if (props.present) {
-                        println("正在设置项目属性:${props.description},key:${props.name},value:${props.value}")
-                        proj.ext[props.name] = props.value
-                    }
+                if (props.present) {
+                    println("正在设置项目属性:${props.description},key:${props.name},value:${props.value}")
+                    project.allprojects.each { proj -> proj.ext[props.name] = props.value }
                 }
             }
             def app = project.evaluationDependsOn(":app")
@@ -104,7 +102,14 @@ class AndroidBuildPlugin implements Plugin<Project> {
                             println("找到可打包配置:${flavor.name},服务器:${host}")
                             service.server.set(host)
                             service.flavor.set(flavorName)
-                            service.assembleTask.set(assembleTask)
+                            if (!service.reportEnabled) {
+                                println("上报任务不可用,请检查参数配置")
+                            } else if (!service.uploadEnabled) {
+                                println("上传任务不可用,请检查参数配置")
+                            } else {
+                                println("构建任务已设置:${assembleTask.name}")
+                                service.assembleTask.set(assembleTask)
+                            }
                             service.apkFileDir.set(app.layout.buildDirectory.dir("outputs/apk/$flavorName/release/"))
                         }
                     }

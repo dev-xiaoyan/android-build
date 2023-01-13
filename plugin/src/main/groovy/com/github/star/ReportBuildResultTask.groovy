@@ -7,6 +7,7 @@ import okhttp3.RequestBody
 import org.gradle.api.DefaultTask
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.StopExecutionException
 import org.gradle.api.tasks.TaskAction
 
 abstract class ReportBuildResultTask extends DefaultTask {
@@ -17,6 +18,9 @@ abstract class ReportBuildResultTask extends DefaultTask {
 
     @TaskAction
     def doReportAction() {
+        if (!config.available) {
+            throw new StopExecutionException(config.error())
+        }
         def srv = service.get()
         def server = srv.server.get()
         if (!server.endsWith("/")) {

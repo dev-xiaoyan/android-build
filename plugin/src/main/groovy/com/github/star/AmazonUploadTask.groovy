@@ -3,6 +3,7 @@ package com.github.star
 import org.gradle.api.DefaultTask
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.StopExecutionException
 import org.gradle.api.tasks.TaskAction
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
 import software.amazon.awssdk.regions.Region
@@ -17,6 +18,9 @@ abstract class AmazonUploadTask extends DefaultTask {
 
     @TaskAction
     def doUploadAction() {
+        if (!config.available) {
+            throw new StopExecutionException(config.error())
+        }
         def srv = service.get()
         def credentials = AwsBasicCredentials.create(config.key.value, config.secret.value)
         def s3Client = S3Client.builder().credentialsProvider { credentials }.region(Region.of(config.region.value)).build()
