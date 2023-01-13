@@ -81,7 +81,7 @@ abstract class AndroidBuildService implements BuildService<BuildServiceParameter
     }
 
     boolean getAndroidBuildEnabled() {
-        return assembleTaskFound && flavor.present && replacementTask.get().state.failure == null
+        return assembleTaskFound && flavor.present && replacementTask.get().state.failure == null && reportEnabled
     }
 
     boolean getAssembleTaskFound() {
