@@ -25,20 +25,27 @@ abstract class ReportBuildResultTask extends DefaultTask {
         def client = srv.client()
         def status = srv.packageDownloadUrl.present ? "1" : "2"
         def packageDownloadUrl = srv.packageDownloadUrl.getOrElse("")
-        def params = new JsonBuilder(["id"                : "${config.id.value}",
+        def buildId = config.id.value
+        def serverApi = "$server${config.api.value}"
+        def params = new JsonBuilder(["id"                : "${buildId}",
                                       "packageDownloadUrl": "${packageDownloadUrl}",
                                       "status"            : "$status"]).toPrettyString()
-        logger.error("上报请求参数为:${params}")
+        logger.info("开始上报构建结果")
+        logger.info("打包平台为:${srv.flavor.get()}")
+        logger.info("本次打包记录id:${buildId}")
+        logger.info("OSS文件下载地址为:${packageDownloadUrl}")
+        logger.info("上报服务器地址为:${serverApi}")
+        logger.info("上报请求参数为:${params}")
         def body = RequestBody.create(MediaType.get("application/json"), params)
-        def request = new Request.Builder().url("$server${config.api.value}").put(body).build()
+        def request = new Request.Builder().url("$serverApi").put(body).build()
         def call = client.newCall(request)
         def response = call.execute()
         def bodyString = response.body().string()
-        logger.error("上报结果为:${bodyString}")
+        logger.info("上报结果为:${bodyString}")
         if (response.successful) {
-            logger.error("打包结果上报成功🚀🚀🚀🚀🚀")
+            logger.info("打包结果上报成功🚀🚀🚀🚀🚀")
         } else {
-            logger.error("打包结果上报失败,错误信息为:${bodyString}")
+            logger.info("打包结果上报失败,错误信息为:${bodyString}")
         }
     }
 }
