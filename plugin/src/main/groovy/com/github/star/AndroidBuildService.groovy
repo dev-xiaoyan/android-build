@@ -60,12 +60,14 @@ abstract class AndroidBuildService implements BuildService<BuildServiceParameter
 
     boolean getReportEnabled() {
         def task = reportTask.get()
-        return server.present && task.config.api.present
+        return server.present && task.config.api.present && task.config.id.present
     }
 
     boolean getReplacementEnabled() {
         def task = replacementTask.get()
-        return assembleTask.present && flavor.present && task.replacements.present && task.replacements.get().size() > 0
+        return assembleTask.present && flavor.present && task.replacements.present && task.replacements.get().findAll {
+            it.present
+        }.size() > 0
     }
 
     boolean getUploadEnabled() {

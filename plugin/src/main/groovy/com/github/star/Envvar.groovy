@@ -1,7 +1,7 @@
 package com.github.star
 
 class Envvar {
-    String value
+    String value = ""
 
     def envvar(String... keys) {
         keys.find { key ->

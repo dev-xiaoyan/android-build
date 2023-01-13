@@ -8,6 +8,6 @@ class AmazonConfig {
     Envvar dirs = new Envvar()
 
     boolean available() {
-        return key.value != "" && secret.value != "" && bucket.value != "" && region.value != "" && dirs.value != ""
+        return key.present && secret.present && bucket.present && region.present && dirs.present
     }
 }

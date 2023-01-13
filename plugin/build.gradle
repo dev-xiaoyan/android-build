@@ -72,3 +72,8 @@ dependencies {
     implementation 'com.sksamuel.scrimage:scrimage-webp:4.0.32'
     implementation 'javax.inject:javax.inject:1'
 }
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}

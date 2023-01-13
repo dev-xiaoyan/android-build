@@ -85,7 +85,9 @@ class AndroidBuildPlugin implements Plugin<Project> {
         project.afterEvaluate {
             extension.props.each { props ->
                 project.allprojects.each { proj ->
-                    proj.ext[props.name] = props.value
+                    if (props.present) {
+                        proj.ext[props.name] = props.value
+                    }
                 }
             }
             def app = project.evaluationDependsOn(":app")
@@ -102,7 +104,7 @@ class AndroidBuildPlugin implements Plugin<Project> {
                             service.server.set(host)
                             service.flavor.set(flavorName)
                             service.assembleTask.set(assembleTask)
-                            service.apkFileDir.set(app.layout.buildDirectory.dir("intermediates/apk/$flavorName/release/"))
+                            service.apkFileDir.set(app.layout.buildDirectory.dir("outputs/apk/$flavorName/release/"))
                         }
                     }
                 }
