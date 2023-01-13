@@ -23,12 +23,12 @@ abstract class AmazonUploadTask extends DefaultTask {
         def apkFile = srv.apkFileDir.asFileTree.matching { include("*.apk") }.singleFile
         def ossKey = "${config.dirs.value}/${apkFile.name}"
         def bucket = config.bucket.value
-        logger.info("开始上传apk文件到amazon OSS,文件地址为:${ossKey}")
-        logger.info("本地apk文件路径为:${apkFile.path}")
+        println("开始上传apk文件到amazon OSS,文件地址为:${ossKey}")
+        println("本地apk文件路径为:${apkFile.path}")
         PutObjectRequest request = PutObjectRequest.builder().bucket(bucket).key(ossKey).build()
         s3Client.putObject(request, apkFile.toPath())
         def downloadUrl = "https://${config.bucket.value}.s3.amazonaws.com/${ossKey}"
-        logger.info("amazon OSS文件上传成功,文件KEY:${ossKey}")
+        println("amazon OSS文件上传成功,文件KEY:${ossKey}")
         srv.packageDownloadUrl.set(downloadUrl)
     }
 }
