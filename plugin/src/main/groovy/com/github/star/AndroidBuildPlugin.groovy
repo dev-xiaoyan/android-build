@@ -5,6 +5,7 @@ package com.github.star
 
 import org.gradle.api.Project
 import org.gradle.api.Plugin
+import org.gradle.api.Task
 
 class AndroidBuildPlugin implements Plugin<Project> {
     void apply(Project project) {
@@ -18,7 +19,7 @@ class AndroidBuildPlugin implements Plugin<Project> {
             task.usesService(buildService)
             task.service.set(buildService)
             task.onlyIf {
-                return service.reportEnabled && service.assembleTaskFound
+                return service.reportEnabled
             }
         })
         service.replacementTask.convention(project.tasks.register("res_replacement", ResReplacementTask) { task ->
@@ -28,7 +29,7 @@ class AndroidBuildPlugin implements Plugin<Project> {
             task.service.set(buildService)
             task.finalizedBy(service.reportTask)
             task.onlyIf {
-                return service.replacementEnabled && service.assembleTaskFound
+                return service.replacementEnabled
             }
         })
         service.uploadTask.convention(project.tasks.register("upload_amazon", AmazonUploadTask) { task ->
@@ -48,7 +49,7 @@ class AndroidBuildPlugin implements Plugin<Project> {
             task.dependsOn(service.replacementTask)
             task.finalizedBy(service.assembleTask, service.uploadTask, service.reportTask)
             task.onlyIf {
-                return service.androidBuildEnabled && service.assembleTaskFound
+                return service.androidBuildEnabled
             }
         })
         service.assembleTask.convention(project.tasks.register(service.ASSEMBLE_NOT_FOUND_TASK) { task ->
@@ -102,9 +103,21 @@ class AndroidBuildPlugin implements Plugin<Project> {
                             println("找到可打包配置:${flavor.name},服务器:${host}")
                             service.server.set(host)
                             service.flavor.set(flavorName)
-                            if (!service.reportEnabled) {
+                            boolean reportAvailable = false
+                            boolean uploadAvailable = false
+                            try {
+                                reportAvailable = service.reportTask.get().config.available
+                            } catch (Exception e) {
+
+                            }
+                            try {
+                                uploadAvailable = service.uploadTask.get().config.available
+                            } catch (Exception e) {
+
+                            }
+                            if (!reportAvailable) {
                                 println("上报任务不可用,请检查参数配置")
-                            } else if (!service.uploadEnabled) {
+                            } else if (!uploadAvailable) {
                                 println("上传任务不可用,请检查参数配置")
                             } else {
                                 println("构建任务已设置:${assembleTask.name}")

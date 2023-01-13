@@ -26,7 +26,7 @@ abstract class AndroidBuildExtension {
         task.service.set(service)
         task.finalizedBy(srv.reportTask)
         task.onlyIf {
-            return srv.replacementEnabled && srv.assembleTaskFound
+            return srv.replacementEnabled
         }
     }
 
@@ -48,7 +48,7 @@ abstract class AndroidBuildExtension {
         task.finalizedBy(srv.reportTask)
         task.mustRunAfter(srv.assembleTask)
         task.onlyIf {
-            return srv.uploadEnabled && srv.assembleTaskFound
+            return srv.uploadEnabled
         }
     }
 
