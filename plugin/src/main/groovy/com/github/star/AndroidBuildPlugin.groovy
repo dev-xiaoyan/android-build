@@ -86,7 +86,7 @@ class AndroidBuildPlugin implements Plugin<Project> {
             extension.props.each { props ->
                 project.allprojects.each { proj ->
                     if (props.present) {
-                        logger.info("正在设置项目属性:${props.description},key:${props.name},value:${props.value}")
+                        proj.logger.info("正在设置项目属性:${props.description},key:${props.name},value:${props.value}")
                         proj.ext[props.name] = props.value
                     }
                 }
@@ -101,7 +101,7 @@ class AndroidBuildPlugin implements Plugin<Project> {
                         def assembleTask = app.tasks.findByName("assemble${flavorName.capitalize()}Release")
                         if (channel == extension.channel.value && assembleTask != null) {
                             String host = buildConfigFields.HOST.value.replace("\"", "")
-                            logger.info("找到可打包配置:${flavor.name},服务器:${host}")
+                            app.logger.info("找到可打包配置:${flavor.name},服务器:${host}")
                             service.server.set(host)
                             service.flavor.set(flavorName)
                             service.assembleTask.set(assembleTask)
