@@ -2,6 +2,7 @@ package com.github.star
 
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileTree
+import org.gradle.api.file.FileTree
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
@@ -30,12 +31,12 @@ abstract class ResReplacementTask extends DefaultTask {
             }
             println("开始下载资源文件:${replacement.value}")
             InputStream byteStream = service.download(replacement.value).body().byteStream()
-            def fileTree = project.fileTree(dir)
             switch (replacement.resType) {
                 case "image": {
                     def outputFile = "${file.path}.webp"
                     println("资源文件保存地址为:${outputFile}")
                     service.webp(byteStream, outputFile, replacement.width, replacement.height)
+                    def fileTree = project.fileTree(dir)
                     fileTree.matching {
                         include("${replacement.name}.*")
                         exclude("${replacement.name}.webp")
@@ -46,11 +47,21 @@ abstract class ResReplacementTask extends DefaultTask {
                 }
                     break
                 case "raw": {
-                    def outFile = fileTree.matching {
-                        include("${replacement.name}.*")
-                    }.first()
-                    def outputFile = outFile.path
-                    outFile.deleteOnExit()
+                    def fileExt = replacement.ext.trim()
+                    String outputFile = ""
+                    if (fileExt == "" || fileExt == "*") {
+                        println("对于Raw类型的资源替换,无法推断出资源类型,尝试匹配中,如无法匹配,则替换失败")
+                        def fileTree = project.fileTree(dir)
+                        def matchedFiles = fileTree.matching {
+                            include("${replacement.name}.*")
+                        }
+                        if (matchedFiles.files.size() > 0) {
+                            println("匹配到可用资源类型:${matchedFiles.first().path}")
+                            outputFile = matchedFiles.first().path
+                        }
+                    } else {
+                        outputFile = project.file("$baseDir${replacement.name}.${fileExt}").path
+                    }
                     println("资源文件保存地址为:${outputFile}")
                     service.saveFile(byteStream, outputFile)
                 }
