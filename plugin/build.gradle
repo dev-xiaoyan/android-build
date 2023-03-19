@@ -25,6 +25,7 @@ dependencies {
     testImplementation 'org.spockframework:spock-core:2.2-groovy-3.0'
 }
 group = 'com.github.dev-xiaoyan'
+version = "1.6"
 gradlePlugin {
     // Define the plugin
     plugins {
