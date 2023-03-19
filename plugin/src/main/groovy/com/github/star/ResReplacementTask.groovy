@@ -27,18 +27,28 @@ abstract class ResReplacementTask extends DefaultTask {
             if (replacement.description != "") {
                 println("开始下载资源文件:${replacement.description}")
             }
-            println("开始下载图片文件:${replacement.value}")
-            println("图片保存地址为:${file.path}")
-            def byteStream = service.download(replacement.value).body().byteStream()
-            service.webp(byteStream, file.path, replacement.width, replacement.height)
-            def fileTree = project.fileTree(dir)
-            fileTree.matching {
-                include("${replacement.name}.*")
-                exclude("${replacement.name}.webp")
-            }.each {
-                it.delete()
-                println("正在删除冲突图片文件:${it.path}")
+            println("开始下载资源文件:${replacement.value}")
+            println("资源文件保存地址为:${file.path}")
+            InputStream byteStream = service.download(replacement.value).body().byteStream()
+            switch (replacement.resType) {
+                case "image": {
+                    service.webp(byteStream, file.path, replacement.width, replacement.height)
+                    def fileTree = project.fileTree(dir)
+                    fileTree.matching {
+                        include("${replacement.name}.*")
+                        exclude("${replacement.name}.webp")
+                    }.each {
+                        it.delete()
+                        println("正在删除冲突资源文件:${it.path}")
+                    }
+                }
+                    break
+                case "raw": {
+                    service.saveFile(byteStream, file.path)
+                }
+                    break
             }
+
         }
     }
 }

@@ -71,6 +71,7 @@ dependencies {
     implementation 'com.sksamuel.scrimage:scrimage-core:4.0.32'
     implementation 'com.sksamuel.scrimage:scrimage-webp:4.0.32'
     implementation 'javax.inject:javax.inject:1'
+    implementation 'com.squareup.okio:okio:3.3.0'
 }
 
 java {

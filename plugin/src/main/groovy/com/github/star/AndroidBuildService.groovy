@@ -6,11 +6,15 @@ import com.sksamuel.scrimage.webp.WebpWriter
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
+import okio.BufferedSink
+import okio.BufferedSource
+import okio.Okio
 import org.gradle.api.Task
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
+import org.gradle.internal.impldep.com.google.common.io.ByteSink
 
 abstract class AndroidBuildService implements BuildService<BuildServiceParameters.None> {
     final BUILD_TOOL_TASK_GROUP = "android build"
@@ -47,6 +51,16 @@ abstract class AndroidBuildService implements BuildService<BuildServiceParameter
             immutableImage = immutableImage.resizeTo(width, height)
         }
         immutableImage.output(new WebpWriter(), output)
+    }
+
+    static def saveFile(InputStream input, String output) {
+        try {
+            File file = new File(output)
+            def bufferedSink = Okio.buffer(Okio.sink(file))
+            bufferedSink.writeAll(Okio.source(input))
+        } catch (Exception e) {
+            println("保存文件失败:" + e.message)
+        }
     }
 
     Response download(String url) {
