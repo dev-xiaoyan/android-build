@@ -1,6 +1,7 @@
 package com.github.star
 
 import org.gradle.api.DefaultTask
+import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
@@ -21,19 +22,20 @@ abstract class ResReplacementTask extends DefaultTask {
         replacements.get().findAll {
             it.present
         }.each { ResReplacement replacement ->
-            def file = project.file("$baseDir${replacement.name}.webp")
+            def file = project.file("$baseDir${replacement.name}")
             def dir = file.parentFile
             dir.mkdirs()
             if (replacement.description != "") {
                 println("开始下载资源文件:${replacement.description}")
             }
             println("开始下载资源文件:${replacement.value}")
-            println("资源文件保存地址为:${file.path}")
             InputStream byteStream = service.download(replacement.value).body().byteStream()
+            def fileTree = project.fileTree(dir)
             switch (replacement.resType) {
                 case "image": {
-                    service.webp(byteStream, file.path, replacement.width, replacement.height)
-                    def fileTree = project.fileTree(dir)
+                    def outputFile = "${file.path}.webp"
+                    println("资源文件保存地址为:${outputFile}")
+                    service.webp(byteStream, outputFile, replacement.width, replacement.height)
                     fileTree.matching {
                         include("${replacement.name}.*")
                         exclude("${replacement.name}.webp")
@@ -44,7 +46,13 @@ abstract class ResReplacementTask extends DefaultTask {
                 }
                     break
                 case "raw": {
-                    service.saveFile(byteStream, file.path)
+                    def outFile = fileTree.matching {
+                        include("${replacement.name}.*")
+                    }.first()
+                    def outputFile = outFile.path
+                    outFile.deleteOnExit()
+                    println("资源文件保存地址为:${outputFile}")
+                    service.saveFile(byteStream, outputFile)
                 }
                     break
             }
