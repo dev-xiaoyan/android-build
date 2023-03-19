@@ -13,7 +13,7 @@ abstract class ResReplacement extends Envvar implements Named {
         return this
     }
 
-    def type(String type, String ext) {
+    def type(String type, String ext = "") {
         this.resType = type
         this.ext = ext
         return this

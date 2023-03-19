@@ -1,8 +1,7 @@
 package com.github.star
 
+import org.apache.commons.io.FilenameUtils
 import org.gradle.api.DefaultTask
-import org.gradle.api.file.ConfigurableFileTree
-import org.gradle.api.file.FileTree
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
@@ -41,7 +40,18 @@ abstract class ResReplacementTask extends DefaultTask {
                 }
                     break
                 case "raw": {
-                    fileExt = "mp4"
+                    try {
+                        fileExt = FilenameUtils.getExtension(replacement.value)
+                    } catch (Exception e) {
+                        println("获取文件类型失败:${e.message}")
+                        println("资源地址为:${replacement.value}")
+                    }
+                    if (fileExt.trim() == "" && replacement.ext != "") {
+                        fileExt = replacement.ext
+                    }
+                    if (fileExt.trim() == "") {
+                        fileExt = "raw"
+                    }
                     outputFile = "${file.path}.${fileExt}"
                     service.saveFile(byteStream, outputFile)
                 }
@@ -58,4 +68,6 @@ abstract class ResReplacementTask extends DefaultTask {
             }
         }
     }
+
+
 }
