@@ -6,6 +6,7 @@ import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.StopExecutionException
 import org.gradle.api.tasks.TaskAction
 
 abstract class ResReplacementTask extends DefaultTask {
@@ -29,39 +30,49 @@ abstract class ResReplacementTask extends DefaultTask {
                 println("开始下载资源文件:${replacement.description}")
             }
             println("开始下载资源文件:${replacement.value}")
-            InputStream byteStream = service.download(replacement.value).body().byteStream()
-            def fileExt = ""
-            def outputFile = ""
+            String fileExt = ""
+            String outputFile = ""
             switch (replacement.resType) {
                 case "image": {
+                    InputStream byteStream = service.download(replacement.value).body().byteStream()
                     fileExt = "webp"
                     outputFile = "${file.path}.${fileExt}"
                     service.webp(byteStream, outputFile, replacement.width, replacement.height)
                 }
                     break
                 case "raw": {
-                    try {
-                        fileExt = FilenameUtils.getExtension(replacement.value)
-                    } catch (Exception e) {
-                        println("获取文件类型失败:${e.message}")
-                        println("资源地址为:${replacement.value}")
-                    }
-                    if (fileExt.trim() == "" && replacement.ext != "") {
-                        fileExt = replacement.ext
-                    }
-                    if (fileExt.trim() == "") {
-                        fileExt = "raw"
-                    }
+                    InputStream byteStream = service.download(replacement.value).body().byteStream()
+                    fileExt = candidate(fileExtension(replacement.value), replacement.ext, "raw")
                     outputFile = "${file.path}.${fileExt}"
                     service.saveFile(byteStream, outputFile)
                 }
                     break
+                case "video": {
+                    fileExt = candidate(replacement.ext, "webm", fileExtension(replacement.value), "mp4")
+                    outputFile = "${file.path}.${fileExt}"
+                    def result = project.exec {
+                        executable 'ffmpeg'
+                        args("-i", replacement.value)
+                        if (replacement.width > 0 && replacement.height > 0) {
+                            args("-vf", "scale=\'min(${replacement.width},iw)\':\'min(${replacement.height},ih)\':force_original_aspect_ratio=decrease")
+                        }
+                        args("-y", outputFile)
+                        println("正在执行FFMPEG命令:\n${commandLine.join(" ")}")
+                    }
+                    if (result.exitValue != 0) {
+                        throw new StopExecutionException("转换视屏失败:${result.exitValue}")
+                    }
+                }
+                    break
+                default: {
+                    throw new StopExecutionException("不支持的资源类型:${replacement.resType}")
+                }
             }
             println("资源文件保存地址为:${outputFile}")
             def fileTree = project.fileTree(dir)
             fileTree.matching {
-                include("${replacement.name}.*")
-                exclude("${replacement.name}.${fileExt}")
+                include("${file.name}.*")
+                exclude("${file.name}.${fileExt}")
             }.each {
                 it.delete()
                 println("正在删除冲突资源文件:${it.path}")
@@ -69,5 +80,23 @@ abstract class ResReplacementTask extends DefaultTask {
         }
     }
 
+    static String fileExtension(String url) {
+        try {
+            return FilenameUtils.getExtension(url)
+        } catch (Exception e) {
+            println("获取文件类型失败:${e.message}")
+            println("资源地址为:${url}")
+            return ""
+        }
+    }
 
+    static String candidate(String... candidate) {
+        if (candidate != null && candidate.length > 0) {
+            def filterCandidate = candidate.findAll { it != null && it.trim() != "" }
+            if (filterCandidate.size() > 0) {
+                return filterCandidate.first()
+            }
+        }
+        return ""
+    }
 }
