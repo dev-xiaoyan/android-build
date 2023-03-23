@@ -54,7 +54,9 @@ abstract class ResReplacementTask extends DefaultTask {
                         executable 'ffmpeg'
                         args("-i", replacement.value)
                         if (replacement.width > 0 && replacement.height > 0) {
-                            args("-vf", "scale=\'min(${replacement.width},iw)\':\'min(${replacement.height},ih)\':force_original_aspect_ratio=decrease")
+                            def width = "\'ceil(min(${replacement.width},iw)/2)*2\'"
+                            def height = "\'ceil(min(${replacement.height},ih)/2)*2\'"
+                            args("-vf", "scale=$width:$height:force_original_aspect_ratio=decrease")
                         }
                         args("-y", outputFile)
                         println("正在执行FFMPEG命令:\n${commandLine.join(" ")}")
