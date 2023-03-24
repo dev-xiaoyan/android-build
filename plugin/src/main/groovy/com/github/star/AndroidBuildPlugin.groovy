@@ -76,7 +76,19 @@ class AndroidBuildPlugin implements Plugin<Project> {
                         try {
                             return super.invokeMethod(name, args)
                         } catch (e) {
-                            return ext.replacements.maybeCreate("$dir/$name")
+                            def replacement = ext.replacements.maybeCreate("$dir/$name")
+                            if (args != null && args instanceof Object[] && args.length > 0) {
+                                def arg = args.first()
+                                if (arg instanceof Closure) {
+                                    try {
+                                        arg.delegate = replacement
+                                        arg.call()
+                                    } catch (Exception ce) {
+                                        println("dsl error:${ce.message}")
+                                    }
+                                }
+                            }
+                            return replacement
                         }
                     }
                 }
