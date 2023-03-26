@@ -79,13 +79,22 @@ abstract class ResReplacementTask extends DefaultTask {
                 }
             }
             println("资源文件保存地址为:${outputFile}")
-            def fileTree = project.fileTree(dir)
-            fileTree.matching {
+            def fileTree = project.fileTree(dir).matching {
                 include("${file.name}.*")
-                exclude("${file.name}.${fileExt}")
-            }.each {
-                it.delete()
-                println("正在删除冲突资源文件:${it.path}")
+            }
+            //这里有个坑,有些系统不区分文件大小写,如果文件后缀是.MP4 和.mp4会视为同一个文件,删除时要注意
+            if (fileTree.size() == 1) {
+                fileTree.each {
+                    println("命名冲突,正在重新命名为:$outputFile")
+                    it.renameTo(outputFile)
+                }
+            } else if (fileTree.size() > 1) {
+                fileTree.matching {
+                    exclude("${file.name}.${fileExt}")
+                }.each {
+                    it.delete()
+                    println("正在删除冲突资源文件:${it.path}")
+                }
             }
         }
     }

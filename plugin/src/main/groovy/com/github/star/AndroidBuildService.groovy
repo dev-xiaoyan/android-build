@@ -58,6 +58,7 @@ abstract class AndroidBuildService implements BuildService<BuildServiceParameter
             File file = new File(output)
             def bufferedSink = Okio.buffer(Okio.sink(file))
             bufferedSink.writeAll(Okio.source(input))
+            bufferedSink.flush()
         } catch (Exception e) {
             println("保存文件失败:" + e.message)
         }
