@@ -85,8 +85,10 @@ abstract class ResReplacementTask extends DefaultTask {
             //这里有个坑,有些系统不区分文件大小写,如果文件后缀是.MP4 和.mp4会视为同一个文件,删除时要注意
             if (fileTree.size() == 1) {
                 fileTree.each {
-                    println("命名冲突,正在重新命名为:$outputFile")
-                    it.renameTo(outputFile)
+                    if (!it.name.endsWith(".$fileExt")) {
+                        println("命名冲突,正在重新命名为:$outputFile")
+                        it.renameTo(outputFile)
+                    }
                 }
             } else if (fileTree.size() > 1) {
                 fileTree.matching {

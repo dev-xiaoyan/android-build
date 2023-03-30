@@ -103,42 +103,46 @@ class AndroidBuildPlugin implements Plugin<Project> {
                 }
             }
             def app = project.evaluationDependsOn(":app")
-            app.android.applicationVariants.all { variant ->
-                if (variant.buildType.name == "release") {
-                    variant.productFlavors.each { flavor ->
-                        def buildConfigFields = flavor.buildConfigFields
-                        def channel = buildConfigFields.CHANNEL.value.replace("\"", "")
-                        String flavorName = flavor.name
-                        def assembleTask = app.tasks.findByName("assemble${flavorName.capitalize()}Release")
-                        if (channel == extension.channel.value && assembleTask != null) {
-                            String host = buildConfigFields.HOST.value.replace("\"", "")
-                            println("找到可打包配置:${flavor.name},服务器:${host}")
-                            service.server.set(host)
-                            service.flavor.set(flavorName)
-                            boolean reportAvailable = false
-                            boolean uploadAvailable = false
-                            try {
-                                reportAvailable = service.reportTask.get().config.available
-                            } catch (Exception e) {
+            if (app.plugins.hasPlugin("com.android.application")) {
+                app.android.applicationVariants.all { variant ->
+                    if (variant.buildType.name == "release") {
+                        variant.productFlavors.each { flavor ->
+                            def buildConfigFields = flavor.buildConfigFields
+                            def channel = buildConfigFields.CHANNEL.value.replace("\"", "")
+                            String flavorName = flavor.name
+                            def assembleTask = app.tasks.findByName("assemble${flavorName.capitalize()}Release")
+                            if (channel == extension.channel.value && assembleTask != null) {
+                                String host = buildConfigFields.HOST.value.replace("\"", "")
+                                println("找到可打包配置:${flavor.name},服务器:${host}")
+                                service.server.set(host)
+                                service.flavor.set(flavorName)
+                                boolean reportAvailable = false
+                                boolean uploadAvailable = false
+                                try {
+                                    reportAvailable = service.reportTask.get().config.available
+                                } catch (Exception e) {
 
-                            }
-                            try {
-                                uploadAvailable = service.uploadTask.get().config.available
-                            } catch (Exception e) {
+                                }
+                                try {
+                                    uploadAvailable = service.uploadTask.get().config.available
+                                } catch (Exception e) {
 
+                                }
+                                if (!reportAvailable) {
+                                    println("上报任务不可用,请检查参数配置")
+                                } else if (!uploadAvailable) {
+                                    println("上传任务不可用,请检查参数配置")
+                                } else {
+                                    println("构建任务已设置:${assembleTask.name}")
+                                    service.assembleTask.set(assembleTask)
+                                }
+                                service.apkFileDir.set(app.layout.buildDirectory.dir("outputs/apk/$flavorName/release/"))
                             }
-                            if (!reportAvailable) {
-                                println("上报任务不可用,请检查参数配置")
-                            } else if (!uploadAvailable) {
-                                println("上传任务不可用,请检查参数配置")
-                            } else {
-                                println("构建任务已设置:${assembleTask.name}")
-                                service.assembleTask.set(assembleTask)
-                            }
-                            service.apkFileDir.set(app.layout.buildDirectory.dir("outputs/apk/$flavorName/release/"))
                         }
                     }
                 }
+            } else {
+                println("当前不是Application工程,打包插件不可用!!!")
             }
         }
     }
