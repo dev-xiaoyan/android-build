@@ -48,7 +48,7 @@ abstract class AndroidBuildService implements BuildService<BuildServiceParameter
     def webp(InputStream input, String output, int width = -1, int height = -1) {
         def immutableImage = imageLoader.fromStream(input)
         if (width > 0 && height > 0) {
-            immutableImage = immutableImage.resizeTo(width, height)
+            immutableImage = immutableImage.scaleTo(width, height)
         }
         immutableImage.output(new WebpWriter(), output)
     }
